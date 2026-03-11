@@ -14,12 +14,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^7.0.1
         version: 7.0.1(next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@hugeicons/core-free-icons':
-        specifier: ^3.1.1
-        version: 3.1.1
-      '@hugeicons/react':
-        specifier: ^1.1.5
-        version: 1.1.5(react@19.2.3)
+      '@tabler/icons-react':
+        specifier: ^3.40.0
+        version: 3.40.0(react@19.2.3)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -508,14 +505,6 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hugeicons/core-free-icons@3.1.1':
-    resolution: {integrity: sha512-UpS2lUQFi5sKyJSWwM6rO+BnPLvVz1gsyCpPHeZyVuZqi89YH8ksliza4cwaODqKOZyeXmG8juo1ty4QtQofkg==}
-
-  '@hugeicons/react@1.1.5':
-    resolution: {integrity: sha512-JX/iDz3oO7hWdVqbjwFwRrAjHk8h2vI+mBkNzp4JcXG3t4idoupfjon73nLOA7cr27m0M8hrRC1Q2h6nEBGKVA==}
-    peerDependencies:
-      react: '>=16.0.0'
-
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -847,6 +836,14 @@ packages:
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
+
+  '@tabler/icons-react@3.40.0':
+    resolution: {integrity: sha512-oO5+6QCnna4a//mYubx4euZfECtzQZFDGsDMIdzZUhbdyBCT+3bRVFBPueGIcemWld4Vb/0UQ39C/cmGfGylAg==}
+    peerDependencies:
+      react: '>= 16'
+
+  '@tabler/icons@3.40.0':
+    resolution: {integrity: sha512-V/Q4VgNPKubRTiLdmWjV/zscYcj5IIk+euicUtaVVqF6luSC9rDngYWgST5/yh3Mrg/mYUwRv1YVTk71Jp0twQ==}
 
   '@tailwindcss/node@4.1.18':
     resolution: {integrity: sha512-DoR7U1P7iYhw16qJ49fgXUlry1t4CpXeErJHnQ44JgTSKMaZUdf17cfn5mHchfJ4KRBZRFA/Coo+MUF5+gOaCQ==}
@@ -3738,12 +3735,6 @@ snapshots:
     dependencies:
       hono: 4.11.9
 
-  '@hugeicons/core-free-icons@3.1.1': {}
-
-  '@hugeicons/react@1.1.5(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -4011,6 +4002,13 @@ snapshots:
   '@swc/helpers@0.5.15':
     dependencies:
       tslib: 2.8.1
+
+  '@tabler/icons-react@3.40.0(react@19.2.3)':
+    dependencies:
+      '@tabler/icons': 3.40.0
+      react: 19.2.3
+
+  '@tabler/icons@3.40.0': {}
 
   '@tailwindcss/node@4.1.18':
     dependencies:
