@@ -24,14 +24,14 @@ export function EmptyState({
                     {description}
                 </div>
             </div>
-            {action && (
+            {action ? (
                 <Link href={action.href}>
                     <Button size="sm" variant="outline" className="mt-1 gap-1.5">
                         <IconPlus size={12} stroke={2.5} />
                         {action.label}
                     </Button>
                 </Link>
-            )}
+            ) : null}
         </div>
     );
 }

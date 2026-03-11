@@ -32,13 +32,13 @@ export function StatCard({
                 )}>
                     <Icon size={16} stroke={2} />
                 </div>
-                {href && (
+                {href ? (
                     <IconChevronRight
                         size={14}
                         stroke={2}
                         className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
                     />
-                )}
+                ) : null}
             </div>
             <div>
                 <div className={cn(

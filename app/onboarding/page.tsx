@@ -17,6 +17,7 @@ import {
     IconChevronLeft,
     IconBuilding,
 } from "@tabler/icons-react";
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,7 +125,7 @@ function RoleCard({
             className={cn(
                 "flex flex-col gap-4 rounded-xl border p-5 text-left transition-all duration-150 cursor-pointer w-full",
                 selected
-                    ? "border-primary bg-primary/[0.04] ring-1 ring-primary/20"
+                    ? "border-primary bg-primary/4 ring-1 ring-primary/20"
                     : "border-border hover:border-primary/40 hover:bg-muted/30"
             )}
         >
@@ -342,7 +343,7 @@ function BuilderProfileStep({
                                 github.com/
                             </span>
                             <Input
-                                className="pl-[5.5rem]"
+                                className="pl-22"
                                 placeholder="username"
                                 value={data.github}
                                 onChange={(e) => set("github", e.target.value)}
@@ -541,15 +542,12 @@ export default function OnboardingPage() {
     const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
     const router = useRouter();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentUser = useQuery(
-        (api as any).users.getCurrentUser,
+        api.users.getCurrentUser,
         !isAuthenticated ? "skip" : undefined
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const createBuilder = useMutation((api as any).users.createBuilderProfile);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const createManager = useMutation((api as any).users.createManagerProfile);
+    const createBuilder = useMutation(api.users.createBuilderProfile);
+    const createManager = useMutation(api.users.createManagerProfile);
 
     const [role, setRole] = useState<Role | null>(null);
     const [step, setStep] = useState<Step>("role");
@@ -579,13 +577,15 @@ export default function OnboardingPage() {
 
     // Pre-fill from Clerk profile
     useEffect(() => {
-        if (user) {
+        if (user && builderData.name === "" && managerData.name === "") {
             const name = user.fullName || "";
             const username = toSlug(name);
-            setBuilderData((prev) => ({ ...prev, name, username }));
-            setManagerData((prev) => ({ ...prev, name, username }));
+            queueMicrotask(() => {
+                setBuilderData((prev) => ({ ...prev, name, username }));
+                setManagerData((prev) => ({ ...prev, name, username }));
+            });
         }
-    }, [user]);
+    }, [user, builderData.name, managerData.name]);
 
     // If already onboarded, go to dashboard
     useEffect(() => {
@@ -593,6 +593,10 @@ export default function OnboardingPage() {
             router.replace("/dashboard");
         }
     }, [currentUser, router]);
+
+    if (currentUser === undefined) return <DashboardSkeleton />;
+
+    if (currentUser === null) return null;
 
     // ── Loading ──────────────────────────────────────────────────────────────
     if (!isLoaded || isAuthLoading) {
@@ -760,11 +764,11 @@ export default function OnboardingPage() {
                     {/* Logo */}
                     <div className="mb-7 flex items-center justify-between">
                         <span className="text-sm font-bold tracking-tight">GrantsApp</span>
-                        {role && (
+                        {role ? (
                             <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                 {role === "builder" ? "Builder" : "Program Manager"}
                             </span>
-                        )}
+                        ) : null}
                     </div>
 
                     {/* Animated step content */}
@@ -772,29 +776,29 @@ export default function OnboardingPage() {
                         key={step}
                         className="animate-in fade-in-0 slide-in-from-right-3 duration-200"
                     >
-                        {step === "role" && (
+                        {step === "role" ? (
                             <RoleStep role={role} onSelect={handleRoleSelect} />
-                        )}
-                        {step === "profile" && role === "builder" && (
+                        ) : null}
+                        {step === "profile" && role === "builder" ? (
                             <BuilderProfileStep data={builderData} onChange={setBuilderData} />
-                        )}
-                        {step === "profile" && role === "manager" && (
+                        ) : null}
+                        {step === "profile" && role === "manager" ? (
                             <ManagerProfileStep
                                 data={managerData}
                                 onChange={setManagerData}
                             />
-                        )}
-                        {step === "organization" && (
+                        ) : null}
+                        {step === "organization" ? (
                             <OrgStep data={managerData} onChange={setManagerData} />
-                        )}
+                        ) : null}
                     </div>
 
                     {/* Error */}
-                    {error && (
+                    {error ? (
                         <div className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
                             {error}
                         </div>
-                    )}
+                    ) : null}
 
                     {/* Navigation */}
                     <div className="mt-6 flex items-center justify-between gap-2">

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +10,6 @@ import {
     Field,
     FieldGroup,
     FieldLabel,
-    FieldDescription,
 } from "@/components/ui/field";
 import {
     IconX,
@@ -36,8 +34,7 @@ export function AddManagerRoleModal({
     open,
     onClose,
 }: AddManagerRoleModalProps) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const addManagerRole = useMutation((api as any).users.addManagerRole);
+    const addManagerRole = useMutation(api.users.addManagerRole);
 
     const [orgName, setOrgName] = useState("");
     const [orgSlug, setOrgSlug] = useState("");
@@ -204,11 +201,11 @@ export function AddManagerRoleModal({
                         </div>
                     </FieldGroup>
 
-                    {error && (
+                    {error ? (
                         <div className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
                             {error}
                         </div>
-                    )}
+                    ) : null}
 
                     <div className="mt-5 flex gap-2">
                         <Button

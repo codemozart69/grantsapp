@@ -101,10 +101,8 @@ function RoleSwitcherPopover({
     onAddManagerRole: () => void;
 }) {
     const [open, setOpen] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const switchRole = useMutation((api as any).users.switchActiveRole);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const addBuilderRole = useMutation((api as any).users.addBuilderRole);
+    const switchRole = useMutation(api.users.switchActiveRole);
+    const addBuilderRole = useMutation(api.users.addBuilderRole);
 
     const hasBothRoles =
         (currentUser.roles || []).includes("builder") &&
@@ -143,7 +141,7 @@ function RoleSwitcherPopover({
             </div>
 
             {/* Popover */}
-            {open && (
+            {open ? (
                 <>
                     <div
                         className="fixed inset-0 z-10"
@@ -179,13 +177,13 @@ function RoleSwitcherPopover({
                                     >
                                         <IconCode className="size-3.5 shrink-0" />
                                         <span className="flex-1 text-left">Builder</span>
-                                        {isBuilder && (
+                                        {isBuilder ? (
                                             <IconCheck
                                                 size={12}
                                                 stroke={2.5}
                                                 className="text-primary"
                                             />
-                                        )}
+                                        ) : null}
                                     </button>
                                     {/* Switch to Manager */}
                                     <button
@@ -199,13 +197,13 @@ function RoleSwitcherPopover({
                                     >
                                         <IconShield className="size-3.5 shrink-0" />
                                         <span className="flex-1 text-left">Program Manager</span>
-                                        {isManager && (
+                                        {isManager ? (
                                             <IconCheck
                                                 size={12}
                                                 stroke={2.5}
                                                 className="text-primary"
                                             />
-                                        )}
+                                        ) : null}
                                     </button>
                                 </>
                             ) : isBuilder ? (
@@ -265,7 +263,7 @@ function RoleSwitcherPopover({
                         </div>
                     </div>
                 </>
-            )}
+            ) : null}
         </div>
     );
 }
