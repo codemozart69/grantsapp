@@ -10,16 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
-    CodeIcon,
-    ShieldIcon,
-    Tick02Icon,
-    ArrowRight01Icon,
-    ArrowLeft01Icon,
-    UserIcon,
-    Building01Icon,
-} from "@hugeicons/core-free-icons";
+    IconCode,
+    IconCheck,
+    IconChevronRight,
+    IconChevronLeft,
+    IconBuilding,
+} from "@tabler/icons-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,7 +104,7 @@ function RoleCard({
     role,
     selected,
     onSelect,
-    icon,
+    icon: Icon,
     title,
     description,
     features,
@@ -115,7 +112,7 @@ function RoleCard({
     role: Role;
     selected: boolean;
     onSelect: (role: Role) => void;
-    icon: React.ComponentProps<typeof HugeiconsIcon>["icon"];
+    icon: React.ElementType;
     title: string;
     description: string;
     features: string[];
@@ -140,7 +137,7 @@ function RoleCard({
                         : "bg-muted text-muted-foreground"
                 )}
             >
-                <HugeiconsIcon icon={icon} size={18} strokeWidth={2} />
+                <Icon size={18} stroke={2} />
             </div>
 
             {/* Title + description */}
@@ -161,7 +158,7 @@ function RoleCard({
                                 selected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
                             )}
                         >
-                            <HugeiconsIcon icon={Tick02Icon} size={8} strokeWidth={2.5} />
+                            <IconCheck size={8} stroke={2.5} />
                         </div>
                         <span className="text-[11px] text-muted-foreground">{f}</span>
                     </li>
@@ -220,7 +217,7 @@ function RoleStep({
                     role="builder"
                     selected={role === "builder"}
                     onSelect={onSelect}
-                    icon={CodeIcon}
+                    icon={IconCode}
                     title="Builder"
                     description="Apply for grants and build your reputation in the ecosystem."
                     features={[
@@ -233,7 +230,7 @@ function RoleStep({
                     role="manager"
                     selected={role === "manager"}
                     onSelect={onSelect}
-                    icon={ShieldIcon}
+                    icon={IconBuilding}
                     title="Program Manager"
                     description="Create and operate grant programs for your ecosystem or DAO."
                     features={[
@@ -810,7 +807,7 @@ export default function OnboardingPage() {
                                     disabled={isSubmitting}
                                     className="gap-1.5"
                                 >
-                                    <HugeiconsIcon icon={ArrowLeft01Icon} size={14} strokeWidth={2} />
+                                    <IconChevronLeft size={12} stroke={2.5} />
                                     Back
                                 </Button>
                             )}
@@ -832,7 +829,7 @@ export default function OnboardingPage() {
                             ) : (
                                 <>
                                     Continue
-                                    <HugeiconsIcon icon={ArrowRight01Icon} size={14} strokeWidth={2} />
+                                    <IconChevronRight size={12} stroke={2.5} />
                                 </>
                             )}
                         </Button>
