@@ -1,5 +1,4 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Building01Icon } from "@hugeicons/core-free-icons";
+import { IconBuilding } from "@tabler/icons-react";
 
 export function ComingSoonPage({
     title,
@@ -11,10 +10,9 @@ export function ComingSoonPage({
     return (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-12 text-center">
             <div className="bg-muted flex size-12 items-center justify-center rounded-xl">
-                <HugeiconsIcon
-                    icon={Building01Icon}
+                <IconBuilding
                     size={22}
-                    strokeWidth={1.5}
+                    stroke={1.5}
                     className="text-muted-foreground"
                 />
             </div>
