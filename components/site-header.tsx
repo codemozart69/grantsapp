@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+    ClerkLoading,
     Show,
     SignInButton,
     SignUpButton,
@@ -55,9 +56,9 @@ export function SiteHeader() {
                 {/* Right side */}
                 <div className="ml-auto flex items-center gap-2">
                     {/* Subtle loading state while Clerk initializes */}
-                    <Show when="loading">
+                    <ClerkLoading>
                         <div className="bg-muted h-7 w-20 animate-pulse rounded-md" />
-                    </Show>
+                    </ClerkLoading>
 
                     <Show when="signed-out">
                         <SignInButton forceRedirectUrl="/dashboard">
