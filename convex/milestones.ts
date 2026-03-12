@@ -141,8 +141,8 @@ export const create = mutation({
     handler: async (ctx, args) => {
         const application = await ctx.db.get(args.applicationId);
         if (!application) throw new Error("Application not found");
-        if (application.status !== "approved") {
-            throw new Error("Milestones can only be created for approved applications");
+        if (application.status !== "approved" && application.status !== "draft") {
+            throw new Error("Milestones can only be created for approved or draft applications");
         }
 
         const program = await ctx.db.get(application.programId);
@@ -205,7 +205,7 @@ export const update = mutation({
 
         await requireOrgMember(ctx, program.organizationId, "reviewer");
 
-        const { milestoneId, ...fields } = args;
+        const { milestoneId: _milestoneId, ...fields } = args;
         const updates = Object.fromEntries(
             Object.entries(fields).filter(([, v]) => v !== undefined)
         );

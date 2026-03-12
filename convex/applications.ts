@@ -102,6 +102,73 @@ export const listByProgram = query({
 });
 
 /**
+ * List all applications for programs managed by an organization (manager view).
+ * This aggregates applications across all programs in the org.
+ */
+export const listByOrg = query({
+    args: {
+        organizationId: v.id("organizations"),
+        status: v.optional(
+            v.union(
+                v.literal("draft"),
+                v.literal("submitted"),
+                v.literal("under_review"),
+                v.literal("approved"),
+                v.literal("rejected"),
+                v.literal("withdrawn")
+            )
+        ),
+    },
+    handler: async (ctx, args) => {
+        // Find programs for this org
+        const programs = await ctx.db
+            .query("programs")
+            .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+            .collect();
+
+        const programIds = programs.map((p) => p._id);
+
+        const allApplications: any[] = [];
+
+        for (const programId of programIds) {
+            let apps;
+            if (args.status) {
+                apps = await ctx.db
+                    .query("applications")
+                    .withIndex("by_program_status", (q) =>
+                        q.eq("programId", programId).eq("status", args.status!)
+                    )
+                    .collect();
+            } else {
+                apps = await ctx.db
+                    .query("applications")
+                    .withIndex("by_program", (q) => q.eq("programId", programId))
+                    .collect();
+            }
+            allApplications.push(...apps);
+        }
+
+        // Sort globally
+        allApplications.sort(
+            (a, b) =>
+                (b.submittedAt ?? b.createdAt) - (a.submittedAt ?? a.createdAt)
+        );
+
+        // Hydrate
+        return await Promise.all(
+            allApplications.map(async (a) => {
+                const applicant = await ctx.db.get(a.applicantId);
+                const project = a.projectId
+                    ? await ctx.db.get(a.projectId)
+                    : null;
+                const program = programs.find((p) => p._id === a.programId);
+                return { ...a, applicant, project, program };
+            })
+        );
+    },
+});
+
+/**
  * Get a single application by ID.
  */
 export const getById = query({
