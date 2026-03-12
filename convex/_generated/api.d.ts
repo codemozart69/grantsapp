@@ -8,6 +8,16 @@
  * @module
  */
 
+import type * as activityLogs from "../activityLogs.js";
+import type * as applications from "../applications.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_slugs from "../lib/slugs.js";
+import type * as milestones from "../milestones.js";
+import type * as notifications from "../notifications.js";
+import type * as organizationMembers from "../organizationMembers.js";
+import type * as programs from "../programs.js";
+import type * as projects from "../projects.js";
+import type * as reviews from "../reviews.js";
 import type * as users from "../users.js";
 
 import type {
@@ -17,6 +27,16 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activityLogs: typeof activityLogs;
+  applications: typeof applications;
+  "lib/auth": typeof lib_auth;
+  "lib/slugs": typeof lib_slugs;
+  milestones: typeof milestones;
+  notifications: typeof notifications;
+  organizationMembers: typeof organizationMembers;
+  programs: typeof programs;
+  projects: typeof projects;
+  reviews: typeof reviews;
   users: typeof users;
 }>;
 
