@@ -228,7 +228,7 @@ export const update = mutation({
             throw new Error("Only draft applications can be edited");
         }
 
-        const { applicationId, ...fields } = args;
+        const { applicationId: _applicationId, ...fields } = args;
         const updates = Object.fromEntries(
             Object.entries(fields).filter(([, v]) => v !== undefined)
         );
@@ -276,7 +276,6 @@ export const submit = mutation({
             userId: program.createdBy,
             type: "application_submitted",
             title: "New Application Received",
-            description: `A new application was submitted to "${program.name}"`,
             message: `"${application.title}" was submitted by @${user.username}`,
             programId: application.programId,
             applicationId: args.applicationId,
