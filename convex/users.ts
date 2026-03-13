@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getStatsForUser } from "./projects";
 
 export const getCurrentUser = query({
     args: {},
@@ -233,5 +234,20 @@ export const addBuilderRole = mutation({
             activeRole: "builder",
             updatedAt: Date.now(),
         });
+    },
+});
+
+export const getByUsername = query({
+    args: { username: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", args.username))
+            .unique();
+
+        if (!user) return null;
+
+        const stats = await getStatsForUser(ctx, user._id);
+        return { user, stats };
     },
 });

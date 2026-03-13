@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { toSlug, uniqueProjectSlug, isProjectSlugAvailable } from "./lib/slugs";
 import { logActivity } from "./activityLogs";
@@ -107,7 +108,7 @@ export const checkSlugAvailable = query({
 });
 
 /**
- * Get builder dashboard stats.
+ * Get internal stats for the current user's builder dashboard.
  */
 export const getBuilderStats = query({
     args: {},
@@ -122,45 +123,55 @@ export const getBuilderStats = query({
 
         if (!user) return null;
 
-        const applications = await ctx.db
-            .query("applications")
-            .withIndex("by_applicant", (q) => q.eq("applicantId", user._id))
-            .collect();
-
-        const activeGrants = applications.filter((a) => a.status === "approved");
-        const totalEarned = activeGrants.reduce(
-            (sum, a) => sum + (a.approvedAmount ?? 0),
-            0
-        );
-
-        // Count milestones due this month
-        const now = Date.now();
-        const endOfMonth = new Date();
-        endOfMonth.setMonth(endOfMonth.getMonth() + 1);
-        endOfMonth.setDate(0);
-        endOfMonth.setHours(23, 59, 59, 999);
-
-        const milestones = await ctx.db
-            .query("milestones")
-            .withIndex("by_applicant", (q) => q.eq("applicantId", user._id))
-            .collect();
-
-        const milestonesThisMonth = milestones.filter(
-            (m) =>
-                m.dueDate &&
-                m.dueDate >= now &&
-                m.dueDate <= endOfMonth.getTime() &&
-                (m.status === "pending" || m.status === "in_progress")
-        );
-
-        return {
-            applicationCount: applications.length,
-            activeGrantCount: activeGrants.length,
-            milestoneDueCount: milestonesThisMonth.length,
-            totalEarned,
-        };
+        return await getStatsForUser(ctx, user._id);
     },
 });
+
+/**
+ * Helper to calculate stats for a builder (used by both dashboard and public profile).
+ */
+export async function getStatsForUser(ctx: QueryCtx, userId: Id<"users">) {
+    const applications = await ctx.db
+        .query("applications")
+        .withIndex("by_applicant", (q) => q.eq("applicantId", userId))
+        .collect();
+
+    const activeGrants = applications.filter((a) => a.status === "approved");
+    const totalEarned = activeGrants.reduce(
+        (sum, a) => sum + (a.approvedAmount ?? 0),
+        0
+    );
+
+    const milestones = await ctx.db
+        .query("milestones")
+        .withIndex("by_applicant", (q) => q.eq("applicantId", userId))
+        .collect();
+
+    const approvedMilestones = milestones.filter((m) => m.status === "approved");
+
+    // For the dashboard "Milestones Due" stat
+    const now = Date.now();
+    const endOfMonth = new Date();
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+    endOfMonth.setDate(0);
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    const milestonesThisMonth = milestones.filter(
+        (m) =>
+            m.dueDate &&
+            m.dueDate >= now &&
+            m.dueDate <= endOfMonth.getTime() &&
+            (m.status === "pending" || m.status === "in_progress")
+    );
+
+    return {
+        applicationCount: applications.length,
+        activeGrantCount: activeGrants.length,
+        milestoneDueCount: milestonesThisMonth.length,
+        milestonesCompleted: approvedMilestones.length,
+        totalEarned,
+    };
+}
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
@@ -188,6 +199,7 @@ export const create = mutation({
         const baseSlug = args.slug ? toSlug(args.slug) : toSlug(args.name);
         const slug = await uniqueProjectSlug(ctx, baseSlug);
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { slug: _ignoredSlug, ...rest } = args;
 
         const projectId = await ctx.db.insert("projects", {
@@ -239,7 +251,8 @@ export const update = mutation({
             throw new Error("You don't own this project");
         }
 
-        const { projectId, ...fields } = args;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { projectId: _unusedProjectId, ...fields } = args;
         const updates = Object.fromEntries(
             Object.entries(fields).filter(([, v]) => v !== undefined)
         );
