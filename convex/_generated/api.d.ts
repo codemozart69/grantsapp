@@ -16,6 +16,7 @@ import type * as milestones from "../milestones.js";
 import type * as notifications from "../notifications.js";
 import type * as organizationMembers from "../organizationMembers.js";
 import type * as organizations from "../organizations.js";
+import type * as profiles from "../profiles.js";
 import type * as programs from "../programs.js";
 import type * as projects from "../projects.js";
 import type * as reviews from "../reviews.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   organizationMembers: typeof organizationMembers;
   organizations: typeof organizations;
+  profiles: typeof profiles;
   programs: typeof programs;
   projects: typeof projects;
   reviews: typeof reviews;
