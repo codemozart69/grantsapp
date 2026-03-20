@@ -11,11 +11,13 @@ import {
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { IconListSearch, IconGridDots } from "@tabler/icons-react";
+import { IconListSearch, IconGridDots, IconBuilding, IconUsers } from "@tabler/icons-react";
 
 const navLinks = [
     { label: "Browse Grants", href: "/grants", icon: IconListSearch },
     { label: "Projects", href: "/projects", icon: IconGridDots },
+    { label: "Orgs", href: "/orgs", icon: IconBuilding },
+    { label: "Builders", href: "/builders", icon: IconUsers },
 ];
 
 export function SiteHeader() {
@@ -35,8 +37,8 @@ export function SiteHeader() {
                     <span className="text-sm font-bold tracking-tight">GrantsApp</span>
                 </Link>
 
-                {/* Nav links */}
-                <nav className="flex items-center gap-1">
+                {/* Nav links — hidden on small screens */}
+                <nav className="hidden md:flex items-center gap-1">
                     {navLinks.map(({ label, href }) => (
                         <Link
                             key={href}

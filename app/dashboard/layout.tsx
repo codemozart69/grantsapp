@@ -55,13 +55,15 @@ export default function DashboardLayout({
                     onAddManagerRole={() => setShowManagerModal(true)}
                 />
 
-                {/* ── Main content ──────────────────────────────────────────── */}
-                <main className="bg-background flex min-w-0 flex-1 flex-col overflow-y-auto">
+                {/* Main content
+                    - On mobile: pt-14 to clear the fixed top bar added by DashboardSidebar
+                    - On desktop (lg+): no padding needed, sidebar is in-flow
+                */}
+                <main className="bg-background flex min-w-0 flex-1 flex-col overflow-y-auto pt-14 lg:pt-0">
                     {children}
                 </main>
             </div>
 
-            {/* Role upgrade modal */}
             <AddManagerRoleModal
                 open={showManagerModal}
                 onClose={() => setShowManagerModal(false)}
