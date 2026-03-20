@@ -19,6 +19,8 @@ import {
     IconListSearch,
     IconChevronDown,
     IconChevronUp,
+    IconCode,
+    IconX,
 } from "@tabler/icons-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
@@ -34,25 +36,20 @@ interface MilestoneInput {
     dueDate: string;
 }
 
+let _milestoneCounter = 0;
 function newMilestone(order: number): MilestoneInput {
-    return {
-        id: `m-${Date.now()}-${order}`,
-        title: "",
-        description: "",
-        deliverables: "",
-        amount: "",
-        dueDate: "",
-    };
+    return { id: `m-${++_milestoneCounter}-${order}`, title: "", description: "", deliverables: "", amount: "", dueDate: "" };
+}
+
+interface NewProjectInput {
+    name: string;
+    description: string;
 }
 
 // ─── Milestone Row ────────────────────────────────────────────────────────────
 
 function MilestoneEditor({
-    milestone,
-    index,
-    onChange,
-    onRemove,
-    currency,
+    milestone, index, onChange, onRemove, currency,
 }: {
     milestone: MilestoneInput;
     index: number;
@@ -65,83 +62,188 @@ function MilestoneEditor({
 
     return (
         <div className="rounded-xl border bg-muted/20">
-            {/* Header */}
-            <div
-                className="flex cursor-pointer items-center gap-3 px-4 py-3"
-                onClick={() => setExpanded((v) => !v)}
-            >
-                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                    {index + 1}
-                </div>
-                <span className="flex-1 truncate text-xs font-medium">
-                    {milestone.title || `Milestone ${index + 1}`}
-                </span>
+            <div className="flex cursor-pointer items-center gap-3 px-4 py-3" onClick={() => setExpanded((v) => !v)}>
+                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{index + 1}</div>
+                <span className="flex-1 truncate text-xs font-medium">{milestone.title || `Milestone ${index + 1}`}</span>
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                        className="rounded p-0.5 text-muted-foreground transition-colors hover:text-destructive"
-                    >
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(); }} className="rounded p-0.5 text-muted-foreground transition-colors hover:text-destructive">
                         <IconTrash size={12} stroke={2} />
                     </button>
-                    {expanded
-                        ? <IconChevronUp size={13} stroke={2} className="text-muted-foreground" />
-                        : <IconChevronDown size={13} stroke={2} className="text-muted-foreground" />}
+                    {expanded ? <IconChevronUp size={13} stroke={2} className="text-muted-foreground" /> : <IconChevronDown size={13} stroke={2} className="text-muted-foreground" />}
                 </div>
             </div>
-
-            {/* Body */}
             {expanded && (
                 <div className="border-t px-4 pb-4 pt-3">
                     <FieldGroup>
                         <Field>
                             <FieldLabel>Title <span className="text-destructive">*</span></FieldLabel>
-                            <Input
-                                placeholder="e.g. Smart contract deployment"
-                                value={milestone.title}
-                                onChange={(e) => set("title", e.target.value)}
-                            />
+                            <Input placeholder="e.g. Smart contract deployment" value={milestone.title} onChange={(e) => set("title", e.target.value)} />
                         </Field>
                         <Field>
                             <FieldLabel>Description <span className="text-destructive">*</span></FieldLabel>
-                            <Textarea
-                                placeholder="What will you build or deliver in this milestone?"
-                                value={milestone.description}
-                                onChange={(e) => set("description", e.target.value)}
-                                className="min-h-16 resize-none"
-                            />
+                            <Textarea placeholder="What will you build or deliver?" value={milestone.description} onChange={(e) => set("description", e.target.value)} className="min-h-16 resize-none" />
                         </Field>
                         <Field>
                             <FieldLabel>Deliverables</FieldLabel>
-                            <Textarea
-                                placeholder="Specific outputs: GitHub repo, deployed contract, demo video..."
-                                value={milestone.deliverables}
-                                onChange={(e) => set("deliverables", e.target.value)}
-                                className="min-h-14 resize-none"
-                            />
+                            <Textarea placeholder="GitHub repo, deployed contract, demo..." value={milestone.deliverables} onChange={(e) => set("deliverables", e.target.value)} className="min-h-14 resize-none" />
                         </Field>
                         <div className="grid grid-cols-2 gap-3">
                             <Field>
                                 <FieldLabel>Amount ({currency ?? "USD"})</FieldLabel>
-                                <Input
-                                    type="number"
-                                    placeholder="5000"
-                                    value={milestone.amount}
-                                    onChange={(e) => set("amount", e.target.value)}
-                                    min="0"
-                                />
+                                <Input type="number" placeholder="5000" value={milestone.amount} onChange={(e) => set("amount", e.target.value)} min="0" />
                             </Field>
                             <Field>
                                 <FieldLabel>Target Due Date</FieldLabel>
-                                <Input
-                                    type="date"
-                                    value={milestone.dueDate}
-                                    onChange={(e) => set("dueDate", e.target.value)}
-                                />
+                                <Input type="date" value={milestone.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
                             </Field>
                         </div>
                     </FieldGroup>
                 </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Inline new project form ──────────────────────────────────────────────────
+
+function InlineProjectForm({
+    onCreated,
+    onCancel,
+    busy,
+}: {
+    onCreated: (projectId: string, name: string) => void;
+    onCancel?: () => void;
+    busy?: boolean;
+}) {
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createProject = useMutation((api as any).projects.create);
+
+    const handleCreate = async () => {
+        if (!name.trim() || !description.trim()) return;
+        setError(null);
+        setIsCreating(true);
+        try {
+            const projectId = await createProject({
+                name: name.trim(),
+                description: description.trim(),
+            });
+            onCreated(projectId as string, name.trim());
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to create project.");
+            setIsCreating(false);
+        }
+    };
+
+    return (
+        <div className="rounded-xl border border-primary/20 bg-primary/3 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="flex size-5 items-center justify-center rounded-md bg-primary/10">
+                        <IconCode size={11} stroke={2} className="text-primary" />
+                    </div>
+                    <span className="text-xs font-semibold text-primary">New project</span>
+                </div>
+                {onCancel && (
+                    <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <IconX size={14} stroke={2} />
+                    </button>
+                )}
+            </div>
+            <FieldGroup>
+                <Field>
+                    <FieldLabel>Project name <span className="text-destructive">*</span></FieldLabel>
+                    <Input placeholder="My DApp" value={name} onChange={(e) => setName(e.target.value)} />
+                </Field>
+                <Field>
+                    <FieldLabel>Description <span className="text-destructive">*</span></FieldLabel>
+                    <Textarea
+                        placeholder="What are you building? You can add more detail later."
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="min-h-16 resize-none"
+                    />
+                </Field>
+            </FieldGroup>
+            {error && <div className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>}
+            <div className="flex items-center justify-end gap-2">
+                {onCancel && (
+                    <Button variant="ghost" size="sm" onClick={onCancel} disabled={isCreating || busy}>
+                        Cancel
+                    </Button>
+                )}
+                <Button size="sm" onClick={handleCreate} disabled={!name.trim() || !description.trim() || isCreating || busy}>
+                    {isCreating ? (
+                        <span className="flex items-center gap-1.5">
+                            <div className="size-3 animate-spin rounded-full border border-current border-t-transparent" />
+                            Creating...
+                        </span>
+                    ) : "Create & Select"}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+// ─── Project selector ─────────────────────────────────────────────────────────
+
+const CREATE_NEW_VALUE = "__create_new__";
+
+function ProjectSelector({
+    projects,
+    selectedId,
+    onSelect,
+    onNewProjectCreated,
+    busy,
+}: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    projects: any[];
+    selectedId: string;
+    onSelect: (id: string) => void;
+    onNewProjectCreated: (id: string, name: string) => void;
+    busy?: boolean;
+}) {
+    const [showNewForm, setShowNewForm] = useState(false);
+
+    const handleChange = (val: string) => {
+        if (val === CREATE_NEW_VALUE) {
+            setShowNewForm(true);
+        } else {
+            onSelect(val);
+        }
+    };
+
+    const handleCreated = (id: string, name: string) => {
+        setShowNewForm(false);
+        onNewProjectCreated(id, name);
+    };
+
+    return (
+        <div className="space-y-3">
+            <select
+                value={showNewForm ? CREATE_NEW_VALUE : selectedId}
+                onChange={(e) => handleChange(e.target.value)}
+                disabled={busy}
+                className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+                <option value="">No project selected</option>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {projects.map((p: any) => (
+                    <option key={p._id} value={p._id}>{p.name}</option>
+                ))}
+                <option value={CREATE_NEW_VALUE}>＋ Create a new project...</option>
+            </select>
+
+            {showNewForm && (
+                <InlineProjectForm
+                    onCreated={handleCreated}
+                    onCancel={() => { setShowNewForm(false); onSelect(""); }}
+                    busy={busy}
+                />
             )}
         </div>
     );
@@ -176,18 +278,26 @@ export default function ApplyPage() {
     const [relevantLinks, setRelevantLinks] = useState("");
     const [milestones, setMilestones] = useState<MilestoneInput[]>([newMilestone(0)]);
 
+    // Track new projects created inline (so we can show them even before re-fetch)
+    const [inlineNewProject, setInlineNewProject] = useState<{ id: string; name: string } | null>(null);
+    const [showInlineCreate, setShowInlineCreate] = useState(false);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDrafting, setIsDrafting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const isMilestoneBased = program?.mechanism === "milestone";
     const canSubmit = title.trim().length > 0 && description.trim().length > 0;
+    const milestonesValid = !isMilestoneBased || milestones.every((m) => m.title.trim().length > 0 && m.description.trim().length > 0);
 
-    const milestonesValid =
-        !isMilestoneBased ||
-        milestones.every((m) => m.title.trim().length > 0 && m.description.trim().length > 0);
-
-    // ── Loading ──────────────────────────────────────────────────────────────
+    // Determine which projects to show in the selector
+    // Include any newly created inline project even if the query hasn't refreshed yet
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const displayProjects: any[] = myProjects ? [...myProjects] : [];
+    if (inlineNewProject && !displayProjects.find((p) => p._id === inlineNewProject.id)) {
+        displayProjects.unshift({ _id: inlineNewProject.id, name: inlineNewProject.name });
+    }
+    const hasProjects = displayProjects.length > 0;
 
     if (program === undefined || myProjects === undefined) {
         return (
@@ -225,8 +335,6 @@ export default function ApplyPage() {
         );
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
     const buildApplicationArgs = () => ({
         programId: program._id as Id<"programs">,
         title: title.trim(),
@@ -235,9 +343,7 @@ export default function ApplyPage() {
         requestedAmount: requestedAmount ? parseFloat(requestedAmount) : undefined,
         proposedTimeline: proposedTimeline.trim() || undefined,
         teamDescription: teamDescription.trim() || undefined,
-        relevantLinks: relevantLinks.trim()
-            ? relevantLinks.split("\n").map((l) => l.trim()).filter(Boolean)
-            : undefined,
+        relevantLinks: relevantLinks.trim() ? relevantLinks.split("\n").map((l) => l.trim()).filter(Boolean) : undefined,
     });
 
     const createMilestonesForApplication = async (applicationId: Id<"applications">) => {
@@ -256,17 +362,13 @@ export default function ApplyPage() {
         }
     };
 
-    // ── Save as draft ────────────────────────────────────────────────────────
-
     const handleSaveDraft = async () => {
         if (!canSubmit) return;
         setError(null);
         setIsDrafting(true);
         try {
             const applicationId = await createApplication(buildApplicationArgs());
-            if (isMilestoneBased) {
-                await createMilestonesForApplication(applicationId);
-            }
+            if (isMilestoneBased) await createMilestonesForApplication(applicationId);
             router.push(`/dashboard/applications/${applicationId}`);
         } catch (e) {
             setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -274,17 +376,13 @@ export default function ApplyPage() {
         }
     };
 
-    // ── Submit ───────────────────────────────────────────────────────────────
-
     const handleSubmit = async () => {
         if (!canSubmit || !milestonesValid) return;
         setError(null);
         setIsSubmitting(true);
         try {
             const applicationId = await createApplication(buildApplicationArgs());
-            if (isMilestoneBased) {
-                await createMilestonesForApplication(applicationId);
-            }
+            if (isMilestoneBased) await createMilestonesForApplication(applicationId);
             await submitApplication({ applicationId });
             router.push(`/dashboard/applications/${applicationId}`);
         } catch (e) {
@@ -295,17 +393,18 @@ export default function ApplyPage() {
 
     const busy = isSubmitting || isDrafting;
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    const handleNewProjectCreated = (id: string, name: string) => {
+        setInlineNewProject({ id, name });
+        setSelectedProjectId(id);
+        setShowInlineCreate(false);
+    };
 
     return (
         <div className="min-h-[calc(100vh-3.5rem)] bg-background">
             {/* Breadcrumb */}
             <div className="border-b bg-muted/20 px-6 py-3">
                 <div className="mx-auto max-w-2xl">
-                    <Link
-                        href={`/grants/${slug}`}
-                        className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground w-fit"
-                    >
+                    <Link href={`/grants/${slug}`} className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground w-fit">
                         <IconChevronLeft size={13} stroke={2.5} />
                         {program.name}
                     </Link>
@@ -343,9 +442,7 @@ export default function ApplyPage() {
 
                             <Field>
                                 <FieldLabel>Project Description <span className="text-destructive">*</span></FieldLabel>
-                                <FieldDescription>
-                                    What are you building? What problem does it solve? Why is this ecosystem the right fit?
-                                </FieldDescription>
+                                <FieldDescription>What are you building? What problem does it solve?</FieldDescription>
                                 <Textarea
                                     placeholder="Our project builds a peer-to-peer marketplace that..."
                                     value={description}
@@ -354,24 +451,55 @@ export default function ApplyPage() {
                                 />
                             </Field>
 
-                            {/* Project selector */}
-                            {myProjects && myProjects.length > 0 && (
-                                <Field>
-                                    <FieldLabel>Link to a Project (optional)</FieldLabel>
-                                    <FieldDescription>Connect this application to an existing project in your portfolio.</FieldDescription>
-                                    <select
-                                        value={selectedProjectId}
-                                        onChange={(e) => setSelectedProjectId(e.target.value)}
-                                        className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
-                                    >
-                                        <option value="">No project selected</option>
-                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                        {myProjects.map((p: any) => (
-                                            <option key={p._id} value={p._id}>{p.name}</option>
-                                        ))}
-                                    </select>
-                                </Field>
-                            )}
+                            {/* Project — always shown, three states */}
+                            <Field>
+                                <FieldLabel>Link to a Project</FieldLabel>
+                                <FieldDescription>
+                                    Connect this application to a project in your portfolio.
+                                    {!hasProjects && " Create one below to get started."}
+                                </FieldDescription>
+
+                                {hasProjects ? (
+                                    /* Has projects — show selector with "Create new" option */
+                                    <ProjectSelector
+                                        projects={displayProjects}
+                                        selectedId={selectedProjectId}
+                                        onSelect={setSelectedProjectId}
+                                        onNewProjectCreated={handleNewProjectCreated}
+                                        busy={busy}
+                                    />
+                                ) : showInlineCreate ? (
+                                    /* No projects, showing create form */
+                                    <InlineProjectForm
+                                        onCreated={handleNewProjectCreated}
+                                        onCancel={() => setShowInlineCreate(false)}
+                                        busy={busy}
+                                    />
+                                ) : (
+                                    /* No projects, not creating yet */
+                                    <div className="rounded-xl border border-dashed p-5 text-center space-y-3">
+                                        <div className="flex size-9 items-center justify-center rounded-lg bg-muted mx-auto">
+                                            <IconCode size={16} stroke={2} className="text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-medium">No projects yet</div>
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                Link this application to a project to build your funding reputation.
+                                            </p>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1.5"
+                                            onClick={() => setShowInlineCreate(true)}
+                                            disabled={busy}
+                                        >
+                                            <IconPlus size={12} stroke={2.5} />
+                                            Create a project
+                                        </Button>
+                                    </div>
+                                )}
+                            </Field>
 
                             {/* Requested amount */}
                             <Field>
@@ -413,7 +541,6 @@ export default function ApplyPage() {
                                     className="min-h-20 resize-y"
                                 />
                             </Field>
-
                             <Field>
                                 <FieldLabel>Team Description</FieldLabel>
                                 <FieldDescription>Who is working on this? Include relevant backgrounds.</FieldDescription>
@@ -424,7 +551,6 @@ export default function ApplyPage() {
                                     className="min-h-20 resize-y"
                                 />
                             </Field>
-
                             <Field>
                                 <FieldLabel>Relevant Links</FieldLabel>
                                 <FieldDescription>GitHub repos, demos, previous work — one URL per line.</FieldDescription>
@@ -438,7 +564,7 @@ export default function ApplyPage() {
                         </FieldGroup>
                     </div>
 
-                    {/* Milestones — only for milestone-based programs */}
+                    {/* Milestones */}
                     {isMilestoneBased && (
                         <div className="rounded-xl border bg-card p-6">
                             <div className="mb-2 flex items-center justify-between">
@@ -462,7 +588,6 @@ export default function ApplyPage() {
                                     Add
                                 </Button>
                             </div>
-
                             <div className="mt-4 space-y-3">
                                 {milestones.map((m, i) => (
                                     <MilestoneEditor
@@ -476,23 +601,17 @@ export default function ApplyPage() {
                                             setMilestones(next);
                                         }}
                                         onRemove={() => {
-                                            if (milestones.length > 1) {
-                                                setMilestones(milestones.filter((_, idx) => idx !== i));
-                                            }
+                                            if (milestones.length > 1) setMilestones(milestones.filter((_, idx) => idx !== i));
                                         }}
                                     />
                                 ))}
                             </div>
-
-                            {/* Total */}
                             {milestones.some((m) => m.amount) && (
                                 <div className="mt-3 flex items-center justify-between rounded-lg bg-muted/50 px-4 py-2.5">
                                     <span className="text-xs text-muted-foreground">Total milestone budget</span>
                                     <span className="text-xs font-semibold">
                                         {program.currency === "USD" || program.currency === "USDC" ? "$" : ""}
-                                        {milestones
-                                            .reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0)
-                                            .toLocaleString()}
+                                        {milestones.reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0).toLocaleString()}
                                         {" "}{program.currency ?? "USD"}
                                     </span>
                                 </div>
@@ -500,30 +619,17 @@ export default function ApplyPage() {
                         </div>
                     )}
 
-                    {/* Error */}
                     {error && (
-                        <div className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                            {error}
-                        </div>
+                        <div className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>
                     )}
 
                     {/* Actions */}
                     <div className="flex items-center gap-3 pb-8">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/grants/${slug}`)}
-                            disabled={busy}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/grants/${slug}`)} disabled={busy}>
                             Cancel
                         </Button>
                         <div className="ml-auto flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleSaveDraft}
-                                disabled={!canSubmit || busy}
-                            >
+                            <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={!canSubmit || busy}>
                                 {isDrafting ? (
                                     <span className="flex items-center gap-1.5">
                                         <div className="size-3 animate-spin rounded-full border border-current border-t-transparent" />
@@ -531,11 +637,7 @@ export default function ApplyPage() {
                                     </span>
                                 ) : "Save Draft"}
                             </Button>
-                            <Button
-                                size="sm"
-                                onClick={handleSubmit}
-                                disabled={!canSubmit || !milestonesValid || busy}
-                            >
+                            <Button size="sm" onClick={handleSubmit} disabled={!canSubmit || !milestonesValid || busy}>
                                 {isSubmitting ? (
                                     <span className="flex items-center gap-1.5">
                                         <div className="size-3 animate-spin rounded-full border border-current border-t-transparent" />
