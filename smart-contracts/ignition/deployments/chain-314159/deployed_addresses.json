@@ -1,3 +1,4 @@
 {
-  "GrantsVaultModule#GrantsVault": "0x1d4281092A05f38C458F1Ba08B606a5355CC39A3"
+  "GrantsVaultModule#GrantsVault": "0x1d4281092A05f38C458F1Ba08B606a5355CC39A3",
+  "GrantsVaultFactoryModule#GrantsVaultFactory": "0x5bb7D1bEb1C51BD01590560F4d3Ae28d9301bB3a"
 }

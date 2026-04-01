@@ -157,6 +157,8 @@ function RoleSwitcherPopover({
     );
 }
 
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+
 // ─── Shared sidebar content ───────────────────────────────────────────────────
 
 function SidebarContent({
@@ -196,9 +198,12 @@ function SidebarContent({
 
             {/* Footer */}
             <div className="border-border shrink-0 border-t p-3 space-y-1">
-                <div className="flex items-center justify-between px-1 mb-1">
+                <div className="flex items-center justify-between px-1 mb-2">
                     <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Notifications</span>
                     <NotificationsPanel />
+                </div>
+                <div className="px-1 mb-3">
+                    <ConnectButton showBalance={false} chainStatus="icon" />
                 </div>
                 <RoleSwitcherPopover currentUser={currentUser} onAddManagerRole={onAddManagerRole} />
             </div>

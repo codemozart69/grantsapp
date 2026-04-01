@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -282,7 +282,6 @@ function ManagerReviewPanel({ application }: { application: any }) {
 export default function ApplicationDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { isAuthenticated } = useConvexAuth();
-    const router = useRouter();
 
     const currentUser = useQuery(
         api.users.getCurrentUser,
@@ -479,6 +478,36 @@ export default function ApplicationDetailPage() {
                         )}
                     </div>
 
+                    {application.customAnswers && application.customAnswers.length > 0 && application.program?.customQuestions && (
+                        <div className="rounded-xl border bg-card p-5 space-y-5">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            {application.customAnswers.map((answerObj: any) => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const questionDef = application.program.customQuestions.find((q: any) => q.id === answerObj.questionId);
+                                if (!questionDef) return null;
+                                return (
+                                    <Section key={answerObj.questionId} title={questionDef.question}>
+                                        {questionDef.type === "link" ? (
+                                            <a
+                                                href={answerObj.answer}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+                                            >
+                                                <IconExternalLink size={14} stroke={2} />
+                                                {answerObj.answer}
+                                            </a>
+                                        ) : (
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+                                                {answerObj.answer}
+                                            </p>
+                                        )}
+                                    </Section>
+                                );
+                            })}
+                        </div>
+                    )}
+
                     {application.project && (
                         <div className="rounded-xl border bg-card p-5">
                             <Section title="Project">
@@ -556,6 +585,8 @@ export default function ApplicationDetailPage() {
                                 paymentStatus={application.paymentStatus}
                                 suggestedAmount={application.approvedAmount ?? application.requestedAmount}
                                 currency={application.program?.currency ?? "USD"}
+                                vaultAddress={application.program?.vaultAddress}
+                                applicantWalletAddress={application.applicant?.walletAddress}
                             />
                         </>
                     ) : (

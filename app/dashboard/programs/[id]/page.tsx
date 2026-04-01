@@ -13,6 +13,7 @@ import {
   programToFormValues,
   type ProgramFormValues,
 } from "@/components/dashboard/programs/program-form";
+import { VaultDeploymentPanel } from "@/components/dashboard/programs/vault-deployment-panel";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

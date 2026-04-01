@@ -9,6 +9,7 @@ import {
     SignUpButton,
     UserButton,
 } from "@clerk/nextjs";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { IconListSearch, IconGridDots, IconBuilding, IconUsers } from "@tabler/icons-react";
@@ -76,6 +77,7 @@ export function SiteHeader() {
                     </Show>
 
                     <Show when="signed-in">
+                        <ConnectButton showBalance={false} chainStatus="icon" />
                         <Link href="/dashboard">
                             <Button variant="outline" size="sm" className="cursor-pointer">
                                 Dashboard

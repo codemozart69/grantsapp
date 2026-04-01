@@ -14,6 +14,11 @@ import {
     IconCoins,
     IconTarget,
     IconCheck,
+    IconEye,
+    IconEyeOff,
+    IconPlus,
+    IconTrash,
+    IconGripVertical,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +62,14 @@ export const CURRENCIES = ["USD", "USDC", "FIL", "ETH", "MATIC", "SOL", "AVAX"];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface CustomQuestion {
+    id: string;
+    type: "text" | "long_text" | "link" | "single_choice";
+    question: string;
+    required: boolean;
+    options?: string[];
+}
+
 export interface ProgramFormValues {
     name: string;
     description: string;
@@ -72,6 +85,8 @@ export interface ProgramFormValues {
     reviewEndDate: string;
     categories: string[];
     ecosystems: string[];
+    visibility: "public" | "unlisted";
+    customQuestions: CustomQuestion[];
 }
 
 export const DEFAULT_FORM_VALUES: ProgramFormValues = {
@@ -89,6 +104,8 @@ export const DEFAULT_FORM_VALUES: ProgramFormValues = {
     reviewEndDate: "",
     categories: [],
     ecosystems: [],
+    visibility: "public",
+    customQuestions: [],
 };
 
 /** Convert a Convex program doc into ProgramFormValues for edit mode. */
@@ -112,6 +129,8 @@ export function programToFormValues(program: any): ProgramFormValues {
         reviewEndDate: ts2date(program.reviewEndDate),
         categories: program.categories ?? [],
         ecosystems: program.ecosystems ?? [],
+        visibility: program.visibility ?? "public",
+        customQuestions: program.customQuestions ?? [],
     };
 }
 
@@ -140,6 +159,8 @@ export function parseFormValues(values: ProgramFormValues) {
             values.categories.length > 0 ? values.categories : undefined,
         ecosystems:
             values.ecosystems.length > 0 ? values.ecosystems : undefined,
+        visibility: values.visibility,
+        customQuestions: values.customQuestions.length > 0 ? values.customQuestions : undefined,
     };
 }
 
@@ -466,6 +487,155 @@ export function ProgramForm({
                 </FormSection>
             </div>
 
+            {/* ── Custom Questions ───────────────────────────────────────────── */}
+            <div className="py-8">
+                <FormSection
+                    title="Custom Questions"
+                    description="Add specific questions for applicants to answer."
+                >
+                    <FieldGroup>
+                        <Field>
+                            <div className="space-y-4">
+                                {values.customQuestions.map((q, index) => (
+                                    <div key={q.id} className="relative rounded-xl border bg-muted/20 p-4 pt-10 group transition-all">
+                                        <div className="absolute top-3 right-3 flex items-center gap-2">
+                                            <div className="flex items-center gap-1.5 bg-background rounded-md border px-2 py-1 text-xs font-medium cursor-pointer"
+                                                onClick={() => {
+                                                    const updated = [...values.customQuestions];
+                                                    updated[index].required = !updated[index].required;
+                                                    set("customQuestions", updated);
+                                                }}>
+                                                <div className={cn("size-3 rounded-full border flex items-center justify-center", q.required ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground")} >
+                                                    {q.required && <IconCheck size={8} stroke={3} />}
+                                                </div>
+                                                Required
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const updated = values.customQuestions.filter(x => x.id !== q.id);
+                                                    set("customQuestions", updated);
+                                                }}
+                                                className="flex size-7 items-center justify-center rounded-md border bg-background text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors cursor-pointer"
+                                            >
+                                                <IconTrash size={14} stroke={2} />
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-[1fr_auto] gap-3">
+                                            <div className="space-y-1.5 flex-1 min-w-0">
+                                                <div className="text-[11px] font-medium text-muted-foreground">Question Title</div>
+                                                <Input
+                                                    value={q.question}
+                                                    onChange={(e) => {
+                                                        const updated = [...values.customQuestions];
+                                                        updated[index].question = e.target.value;
+                                                        set("customQuestions", updated);
+                                                    }}
+                                                    placeholder="What's your project's GitHub URL?"
+                                                    className="h-9 w-full"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5 shrink-0">
+                                                <div className="text-[11px] font-medium text-muted-foreground">Answer Type</div>
+                                                <select
+                                                    value={q.type}
+                                                    onChange={(e) => {
+                                                        const updated = [...values.customQuestions];
+                                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                        updated[index].type = e.target.value as any;
+                                                        if (e.target.value === "single_choice" && !updated[index].options) {
+                                                            updated[index].options = ["Option 1", "Option 2"];
+                                                        }
+                                                        set("customQuestions", updated);
+                                                    }}
+                                                    className="h-9 rounded-md border border-input bg-background pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
+                                                >
+                                                    <option value="text">Short Text</option>
+                                                    <option value="long_text">Paragraph</option>
+                                                    <option value="link">URL Link</option>
+                                                    <option value="single_choice">Single Choice</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Single choice options builder */}
+                                        {q.type === "single_choice" && q.options && (
+                                            <div className="mt-4 space-y-2 rounded-lg border bg-background p-3">
+                                                <div className="text-[11px] font-medium text-muted-foreground mb-1">Options</div>
+                                                {q.options.map((opt, optIdx) => (
+                                                    <div key={optIdx} className="flex items-center gap-2">
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 shrink-0">
+                                                            <div className="size-3 rounded-full border border-muted-foreground/40 bg-background" />
+                                                        </div>
+                                                        <Input 
+                                                            value={opt}
+                                                            onChange={(e) => {
+                                                                const updated = [...values.customQuestions];
+                                                                updated[index].options![optIdx] = e.target.value;
+                                                                set("customQuestions", updated);
+                                                            }}
+                                                            className="h-8 flex-1 text-sm min-w-0"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const updated = [...values.customQuestions];
+                                                                updated[index].options = updated[index].options!.filter((_, i) => i !== optIdx);
+                                                                set("customQuestions", updated);
+                                                            }}
+                                                            disabled={q.options!.length <= 2}
+                                                            className="flex size-7 items-center justify-center text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30 disabled:hover:text-muted-foreground cursor-pointer shrink-0"
+                                                        >
+                                                            <IconTrash size={14} stroke={2} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="gap-1.5 h-8 w-full border border-dashed mt-1"
+                                                    onClick={() => {
+                                                        const updated = [...values.customQuestions];
+                                                        updated[index].options!.push(`Option ${updated[index].options!.length + 1}`);
+                                                        set("customQuestions", updated);
+                                                    }}
+                                                >
+                                                    <IconPlus size={14} stroke={2} />
+                                                    Add Option
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        set("customQuestions", [
+                                            ...values.customQuestions,
+                                            {
+                                                id: "q_" + Math.random().toString(36).substr(2, 9),
+                                                type: "text",
+                                                question: "",
+                                                required: false,
+                                            }
+                                        ]);
+                                    }}
+                                    className="w-full gap-2 border-dashed py-6 text-muted-foreground hover:text-foreground"
+                                >
+                                    <IconPlus size={16} stroke={2} />
+                                    Add Question
+                                </Button>
+                            </div>
+                        </Field>
+                    </FieldGroup>
+                </FormSection>
+            </div>
+
             {/* ── Timeline ───────────────────────────────────────────────────── */}
             <div className="py-8">
                 <FormSection
@@ -522,6 +692,29 @@ export function ProgramForm({
                     description="Help builders find your program in the grants explorer."
                 >
                     <FieldGroup>
+                        <Field>
+                            <FieldLabel>Visibility</FieldLabel>
+                            <FieldDescription>
+                                Should this program be visible on the public explorer?
+                            </FieldDescription>
+                            <div className="mt-2 grid grid-cols-2 gap-3">
+                                <MechanismCard
+                                    selected={values.visibility === "public"}
+                                    onSelect={() => set("visibility", "public")}
+                                    title="Public"
+                                    description="Visible to everyone on the GrantsApp explorer."
+                                    icon={IconEye}
+                                />
+                                <MechanismCard
+                                    selected={values.visibility === "unlisted"}
+                                    onSelect={() => set("visibility", "unlisted")}
+                                    title="Unlisted"
+                                    description="Only accessible via a direct link."
+                                    icon={IconEyeOff}
+                                />
+                            </div>
+                        </Field>
+
                         <Field>
                             <FieldLabel>Categories</FieldLabel>
                             <FieldDescription>

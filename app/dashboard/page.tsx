@@ -273,6 +273,43 @@ function BuilderOverview({ currentUser }: { currentUser: any }) {
     );
 }
 
+// ─── Program Row ──────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ProgramRow({ program }: { program: any }) {
+    return (
+        <Link href={`/dashboard/programs/${program._id}`}>
+            <div className="group flex items-center gap-3 py-3 border-b last:border-b-0 hover:bg-muted/20 -mx-5 px-5 transition-colors">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <div className="truncate text-xs font-medium">{program.name}</div>
+                        {program.status === "active" && (
+                            <span className="shrink-0 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-700 dark:text-emerald-400">
+                                Active
+                            </span>
+                        )}
+                        {program.status === "draft" && (
+                            <span className="shrink-0 rounded-full bg-muted/50 border border-border px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                                Draft
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 truncate flex gap-2 items-center">
+                        <span>{program.applicationCount || 0} app{(program.applicationCount !== 1) ? "s" : ""}</span>
+                        <span className="opacity-40">&bull;</span>
+                        <span>{formatCurrency(program.budget, program.currency) ?? "Open budget"}</span>
+                    </div>
+                </div>
+                <IconChevronRight
+                    size={12}
+                    stroke={2}
+                    className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                />
+            </div>
+        </Link>
+    );
+}
+
 // ─── Manager Overview ─────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -301,6 +338,12 @@ function ManagerOverview({ currentUser }: { currentUser: any }) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (api as any).activityLogs.getOrgActivity,
         myOrg ? { organizationId: myOrg._id, limit: 8 } : "skip"
+    );
+
+    const recentPrograms = useQuery(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (api as any).programs.listByOrg,
+        myOrg ? { organizationId: myOrg._id } : "skip"
     );
 
     const memberCount =
@@ -374,27 +417,47 @@ function ManagerOverview({ currentUser }: { currentUser: any }) {
                             </Link>
                         </div>
                     </div>
-                    <div className="p-5">
-                        {orgStats?.totalProgramCount === 0 || !orgStats ? (
-                            <EmptyState
-                                icon={IconCommand}
-                                title="No programs yet"
-                                description="Create your first grant program to start receiving applications from builders in the ecosystem."
-                                action={{
-                                    label: "Create Program",
-                                    href: "/dashboard/programs/new",
-                                }}
-                            />
+                    <div className="px-5 py-2">
+                        {recentPrograms === undefined ? (
+                            <div className="space-y-3 py-2">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex items-center gap-3 py-2">
+                                        <div className="flex-1 space-y-1.5">
+                                            <div className="h-3 w-40 rounded bg-muted animate-pulse" />
+                                            <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : recentPrograms.length === 0 ? (
+                            <div className="py-8">
+                                <EmptyState
+                                    icon={IconCommand}
+                                    title="No programs yet"
+                                    description="Create your first grant program to start receiving applications from builders."
+                                    action={{
+                                        label: "Create Program",
+                                        href: "/dashboard/programs/new",
+                                    }}
+                                />
+                            </div>
                         ) : (
-                            <div className="py-4 text-center text-xs text-muted-foreground">
-                                {orgStats.totalProgramCount} program
-                                {orgStats.totalProgramCount !== 1 ? "s" : ""} total &mdash;{" "}
-                                <Link
-                                    href="/dashboard/programs"
-                                    className="text-primary hover:underline"
-                                >
-                                    Manage Programs →
-                                </Link>
+                            <div>
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {recentPrograms.slice(0, 4).map((program: any) => (
+                                    <ProgramRow key={program._id} program={program} />
+                                ))}
+
+                                {recentPrograms.length > 4 && (
+                                    <div className="py-3 text-center">
+                                        <Link
+                                            href="/dashboard/programs"
+                                            className="text-[11px] text-primary hover:underline"
+                                        >
+                                            View all {recentPrograms.length} programs →
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

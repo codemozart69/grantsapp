@@ -10,6 +10,8 @@
 
 import type * as activityLogs from "../activityLogs.js";
 import type * as applications from "../applications.js";
+import type * as comments from "../comments.js";
+import type * as discover from "../discover.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_slugs from "../lib/slugs.js";
 import type * as milestones from "../milestones.js";
@@ -31,6 +33,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   activityLogs: typeof activityLogs;
   applications: typeof applications;
+  comments: typeof comments;
+  discover: typeof discover;
   "lib/auth": typeof lib_auth;
   "lib/slugs": typeof lib_slugs;
   milestones: typeof milestones;

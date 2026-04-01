@@ -15,7 +15,9 @@ import {
     IconChevronDown,
     IconClock,
     IconUser,
-} from "@tabler/icons-react"; import { cn } from "@/lib/utils";
+    IconDownload,
+} from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 import type { ApplicationStatus } from "@/components/dashboard/applications/application-status-badge";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -255,6 +257,58 @@ function ManagerApplications() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : (allApplications ?? []).filter((a: any) => a.programId === programFilter);
 
+    const handleExportCSV = () => {
+        if (!displayed || displayed.length === 0) return;
+
+        const headers = [
+            "Application ID",
+            "Title",
+            "Status",
+            "Program",
+            "Applicant Username",
+            "Applicant Wallet",
+            "Requested Amount",
+            "Approved Amount",
+            "Currency",
+            "Submitted At",
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rows = displayed.map((app: any) => [
+            app._id,
+            `"${(app.title || "").replace(/"/g, '""')}"`,
+            app.status,
+            `"${(app.program?.name || "").replace(/"/g, '""')}"`,
+            `"${app.applicant?.username || ""}"`,
+            app.applicant?.walletAddress || "",
+            app.requestedAmount || 0,
+            app.approvedAmount || 0,
+            app.program?.currency || "USD",
+            app.submittedAt ? new Date(app.submittedAt).toISOString() : "",
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        
+        const timestamp = new Date().toISOString().split("T")[0];
+        const filename = programFilter === "all" 
+            ? `all_applications_${timestamp}.csv` 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            : `${programs?.find((p: any) => p._id === programFilter)?.slug || "program"}_applications_${timestamp}.csv`;
+            
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="flex flex-col gap-6 p-8">
             <div className="flex items-start justify-between">
@@ -264,6 +318,17 @@ function ManagerApplications() {
                         Review incoming applications across all your programs.
                     </p>
                 </div>
+                {displayed && displayed.length > 0 && (
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-1.5"
+                        onClick={handleExportCSV}
+                    >
+                        <IconDownload size={14} stroke={2} />
+                        Export CSV
+                    </Button>
+                )}
             </div>
 
             {/* Filters row */}

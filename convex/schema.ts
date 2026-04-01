@@ -100,6 +100,26 @@ export default defineSchema({
     categories: v.optional(v.array(v.string())),
     ecosystems: v.optional(v.array(v.string())),
 
+    visibility: v.optional(v.union(v.literal("public"), v.literal("unlisted"))),
+
+    // Array of custom questions the applicant must answer
+    customQuestions: v.optional(
+        v.array(
+            v.object({
+                id: v.string(),
+                type: v.union(v.literal("text"), v.literal("long_text"), v.literal("link"), v.literal("single_choice")),
+                question: v.string(),
+                required: v.boolean(),
+                options: v.optional(v.array(v.string())), // For single_choice
+            })
+        )
+    ),
+
+    // FVM on-chain fields
+    vaultAddress: v.optional(v.string()),
+    vaultChainId: v.optional(v.number()),
+    vaultFundedAmount: v.optional(v.number()),
+
     // Denormalized stats
     applicationCount: v.number(),
     approvedCount: v.number(),
@@ -149,9 +169,19 @@ export default defineSchema({
     applicantId: v.id("users"),
     projectId: v.optional(v.id("projects")),
 
-    title: v.string(),
-    description: v.string(),
+    // Standard form fields
+    details: v.optional(v.string()), // The proposal text
     requestedAmount: v.optional(v.number()),
+
+    // Answers to the program's custom questions
+    customAnswers: v.optional(
+        v.array(
+            v.object({
+                questionId: v.string(),
+                answer: v.string(),
+            })
+        )
+    ),
     proposedTimeline: v.optional(v.string()),
     teamDescription: v.optional(v.string()),
     relevantLinks: v.optional(v.array(v.string())),

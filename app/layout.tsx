@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import ConvexClientProvider from "@/components/convex-client-provider";
+import { Web3Provider } from "@/components/web3-provider";
 import { SiteHeader } from "@/components/site-header";
 import { cn } from "@/lib/utils";
 
@@ -44,8 +45,10 @@ export default function RootLayout({
         // afterSignInUrl="/dashboard"
         >
           <ConvexClientProvider>
-            <SiteHeader />
-            {children}
+            <Web3Provider>
+              <SiteHeader />
+              {children}
+            </Web3Provider>
           </ConvexClientProvider>
         </ClerkProvider>
       </body>

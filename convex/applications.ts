@@ -220,6 +220,14 @@ export const create = mutation({
         proposedTimeline: v.optional(v.string()),
         teamDescription: v.optional(v.string()),
         relevantLinks: v.optional(v.array(v.string())),
+        customAnswers: v.optional(
+            v.array(
+                v.object({
+                    questionId: v.string(),
+                    answer: v.string(),
+                })
+            )
+        ),
     },
     handler: async (ctx, args) => {
         const user = await requireAuth(ctx);
@@ -282,6 +290,14 @@ export const update = mutation({
         proposedTimeline: v.optional(v.string()),
         teamDescription: v.optional(v.string()),
         relevantLinks: v.optional(v.array(v.string())),
+        customAnswers: v.optional(
+            v.array(
+                v.object({
+                    questionId: v.string(),
+                    answer: v.string(),
+                })
+            )
+        ),
     },
     handler: async (ctx, args) => {
         const user = await requireAuth(ctx);

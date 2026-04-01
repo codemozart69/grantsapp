@@ -705,9 +705,13 @@ export default function MilestoneDetailPage() {
                             <RecordPaymentPanel
                                 targetType="milestone"
                                 targetId={milestone._id}
+                                applicationId={milestone.applicationId}
                                 status={milestone.status}
                                 paymentStatus={milestone.paymentStatus}
                                 suggestedAmount={milestone.amount}
+                                currency={milestone.program?.currency ?? "USD"}
+                                vaultAddress={milestone.program?.vaultAddress}
+                                applicantWalletAddress={milestone.applicant?.walletAddress}
                             />
                           </>
                         : <BuilderActionPanel milestone={milestone} />}

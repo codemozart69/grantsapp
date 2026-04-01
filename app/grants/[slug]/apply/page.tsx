@@ -23,8 +23,6 @@ import {
     IconX,
 } from "@tabler/icons-react";
 import { Id } from "@/convex/_generated/dataModel";
-import { cn } from "@/lib/utils";
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface MilestoneInput {
@@ -40,12 +38,6 @@ let _milestoneCounter = 0;
 function newMilestone(order: number): MilestoneInput {
     return { id: `m-${++_milestoneCounter}-${order}`, title: "", description: "", deliverables: "", amount: "", dueDate: "" };
 }
-
-interface NewProjectInput {
-    name: string;
-    description: string;
-}
-
 // ─── Milestone Row ────────────────────────────────────────────────────────────
 
 function MilestoneEditor({
@@ -277,6 +269,7 @@ export default function ApplyPage() {
     const [teamDescription, setTeamDescription] = useState("");
     const [relevantLinks, setRelevantLinks] = useState("");
     const [milestones, setMilestones] = useState<MilestoneInput[]>([newMilestone(0)]);
+    const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
 
     // Track new projects created inline (so we can show them even before re-fetch)
     const [inlineNewProject, setInlineNewProject] = useState<{ id: string; name: string } | null>(null);
@@ -287,7 +280,11 @@ export default function ApplyPage() {
     const [error, setError] = useState<string | null>(null);
 
     const isMilestoneBased = program?.mechanism === "milestone";
-    const canSubmit = title.trim().length > 0 && description.trim().length > 0;
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const customQuestionsValid = !program?.customQuestions || program.customQuestions.every((q: any) => !q.required || (customAnswers[q.id] && customAnswers[q.id].trim().length > 0));
+    
+    const canSubmit = title.trim().length > 0 && description.trim().length > 0 && customQuestionsValid;
     const milestonesValid = !isMilestoneBased || milestones.every((m) => m.title.trim().length > 0 && m.description.trim().length > 0);
 
     // Determine which projects to show in the selector
@@ -344,6 +341,10 @@ export default function ApplyPage() {
         proposedTimeline: proposedTimeline.trim() || undefined,
         teamDescription: teamDescription.trim() || undefined,
         relevantLinks: relevantLinks.trim() ? relevantLinks.split("\n").map((l) => l.trim()).filter(Boolean) : undefined,
+        customAnswers: Object.keys(customAnswers).length > 0 ? Object.entries(customAnswers).map(([questionId, answer]) => ({
+            questionId,
+            answer,
+        })) : undefined,
     });
 
     const createMilestonesForApplication = async (applicationId: Id<"applications">) => {
@@ -563,6 +564,60 @@ export default function ApplyPage() {
                             </Field>
                         </FieldGroup>
                     </div>
+
+                    {/* Custom Questions */}
+                    {program.customQuestions && program.customQuestions.length > 0 && (
+                        <div className="rounded-xl border bg-card p-6">
+                            <div className="mb-5 text-sm font-semibold">Additional Questions</div>
+                            <FieldGroup>
+                                {program.customQuestions.map((q: any) => (
+                                    <Field key={q.id}>
+                                        <FieldLabel>
+                                            {q.question} {q.required && <span className="text-destructive">*</span>}
+                                        </FieldLabel>
+                                        {q.type === "text" && (
+                                            <Input
+                                                value={customAnswers[q.id] || ""}
+                                                onChange={(e) => setCustomAnswers({ ...customAnswers, [q.id]: e.target.value })}
+                                                required={q.required}
+                                            />
+                                        )}
+                                        {q.type === "long_text" && (
+                                            <Textarea
+                                                value={customAnswers[q.id] || ""}
+                                                onChange={(e) => setCustomAnswers({ ...customAnswers, [q.id]: e.target.value })}
+                                                className="min-h-20 resize-y"
+                                                required={q.required}
+                                            />
+                                        )}
+                                        {q.type === "link" && (
+                                            <Input
+                                                type="url"
+                                                placeholder="https://"
+                                                value={customAnswers[q.id] || ""}
+                                                onChange={(e) => setCustomAnswers({ ...customAnswers, [q.id]: e.target.value })}
+                                                required={q.required}
+                                            />
+                                        )}
+                                        {q.type === "single_choice" && (
+                                            <select
+                                                value={customAnswers[q.id] || ""}
+                                                onChange={(e) => setCustomAnswers({ ...customAnswers, [q.id]: e.target.value })}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring appearance-none cursor-pointer"
+                                                required={q.required}
+                                            >
+                                                <option value="" disabled>Select an option</option>
+                                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                                {q.options?.map((opt: string) => (
+                                                    <option key={opt} value={opt}>{opt}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </Field>
+                                ))}
+                            </FieldGroup>
+                        </div>
+                    )}
 
                     {/* Milestones */}
                     {isMilestoneBased && (

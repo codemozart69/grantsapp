@@ -52,6 +52,9 @@ export const listPublic = query({
             .withIndex("by_status", (q) => q.eq("status", "active"))
             .collect();
 
+        // Filter out unlisted programs
+        programs = programs.filter((p) => p.visibility !== "unlisted");
+
         if (args.category) {
             programs = programs.filter((p) =>
                 p.categories?.includes(args.category!)
@@ -191,6 +194,18 @@ export const create = mutation({
         reviewEndDate: v.optional(v.number()),
         categories: v.optional(v.array(v.string())),
         ecosystems: v.optional(v.array(v.string())),
+        visibility: v.optional(v.union(v.literal("public"), v.literal("unlisted"))),
+        customQuestions: v.optional(
+            v.array(
+                v.object({
+                    id: v.string(),
+                    type: v.union(v.literal("text"), v.literal("long_text"), v.literal("link"), v.literal("single_choice")),
+                    question: v.string(),
+                    required: v.boolean(),
+                    options: v.optional(v.array(v.string())),
+                })
+            )
+        ),
     },
     handler: async (ctx, args) => {
         const { user } = await requireOrgMember(ctx, args.organizationId, "admin");
@@ -246,6 +261,7 @@ export const update = mutation({
         reviewEndDate: v.optional(v.number()),
         categories: v.optional(v.array(v.string())),
         ecosystems: v.optional(v.array(v.string())),
+        visibility: v.optional(v.union(v.literal("public"), v.literal("unlisted"))),
     },
     handler: async (ctx, args) => {
         const program = await ctx.db.get(args.programId);
@@ -270,6 +286,41 @@ export const update = mutation({
             programId: args.programId,
             action: "program.updated",
             description: `Updated program "${program.name}"`,
+        });
+    },
+});
+
+/**
+ * Record a deployed FVM vault address for a program.
+ */
+export const setVaultAddress = mutation({
+    args: {
+        programId: v.id("programs"),
+        vaultAddress: v.string(),
+        vaultChainId: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const program = await ctx.db.get(args.programId);
+        if (!program) throw new Error("Program not found");
+
+        const { user } = await requireOrgMember(
+            ctx,
+            program.organizationId,
+            "admin"
+        );
+
+        await ctx.db.patch(args.programId, {
+            vaultAddress: args.vaultAddress,
+            vaultChainId: args.vaultChainId,
+            updatedAt: Date.now(),
+        });
+
+        await logActivity(ctx, {
+            userId: user._id,
+            organizationId: program.organizationId,
+            programId: args.programId,
+            action: "program.vault_deployed",
+            description: `Deployed FVM Vault for program "${program.name}"`,
         });
     },
 });
