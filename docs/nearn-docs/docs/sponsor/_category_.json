@@ -1,0 +1,12 @@
+{
+  "position": 5,
+  "label": "Sponsor Guides",
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "sponsor-guides",
+    "title": "NEARN Sponsor Guides",
+    "description": "Simple step-by-step guides for sponsors."
+  }
+}
